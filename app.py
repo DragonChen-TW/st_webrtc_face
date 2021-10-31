@@ -30,7 +30,8 @@ def print_to_file(*args):
 # simple YOLOv5
 # address = 'http://192.168.1.6:3100/single_jpg'
 # address = 'http://140.117.75.46:3100/single_jpg'
-address = 'https://140.117.75.46:3100/single_jpg'
+# address = 'https://140.117.75.46:3100/single_jpg'
+address = 'https://datasci.mis.nsysu.edu.tw:3100/single_jpg'
 
 class GPRCFaceDetection:
     def __init__(self):
