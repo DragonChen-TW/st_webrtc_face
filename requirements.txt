@@ -5,4 +5,4 @@ matplotlib==3.4.3
 opencv-python==4.5.3.56
 simplejpeg==1.6.2
 av==8.0.3
-opencv-python==4.5.3.56
+opencv-python-headless==4.5.3.56
