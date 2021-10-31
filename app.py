@@ -13,8 +13,8 @@ import time
 from meter import SubMeter
 from plotting import draw, names
 
-import http.client
-http.client.HTTPConnection.debuglevel = 1
+# import http.client
+# http.client.HTTPConnection.debuglevel = 1
 
 def print_to_file(*args):
     out_arr = [str(a) for a in args]
@@ -37,9 +37,9 @@ RTC_CONFIGURATION = RTCConfiguration(
 # address = 'https://140.117.75.46:3100/single_jpg'
 address = 'https://datasci.mis.nsysu.edu.tw:3100/single_jpg'
 
-class GPRCFaceDetection:
+class FlaskFaceDetection:
     def __init__(self):
-        self.grpc_send = True
+        self.remote_send = True
         self.session = requests.Session()
         self.session.trust_env = False
         self.sm = SubMeter()
@@ -54,9 +54,9 @@ class GPRCFaceDetection:
 
         # ----- setting width and height skiped -----
 
-        if self.grpc_send:
+        if self.remote_send:
             print('send')
-            self.grpc_send = False
+            self.remote_send = False
 
             # ----- compress to jpeg -----
             img = sjpg.encode_jpeg(ori_img)
@@ -107,16 +107,20 @@ class GPRCFaceDetection:
             print('res', res)
 
             class Res:
-                pass
+                names = names
             res_cls = Res()
-            res_cls.names = names
             for k, v in res.items():
                 setattr(res_cls, k, v)
+            
+            self.sm.update(res['encode_time'], res['modeling_time'], 1e-10, 1e-10)
+            self.sm.plot()
+            if len(self.sm.total_list) == 30:
+                print('fps', 1 / (sum(self.sm.total_list) / len(self.sm.total_list)))
 
             out_img = ori_img
             out_img = draw(res_cls, [ori_img])[0]
             
-            self.grpc_send = True
+            self.remote_send = True
 
         return av.VideoFrame.from_ndarray(out_img, format='bgr24')
 
@@ -124,7 +128,7 @@ webrtc_streamer(
     # mode=WebRtcMode.SENDRECV,
     rtc_configuration=RTC_CONFIGURATION,
     media_stream_constraints={'video': True, 'audio': False},
-    video_processor_factory=GPRCFaceDetection,
+    video_processor_factory=FlaskFaceDetection,
     key='sample',
 )
 
