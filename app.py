@@ -1,4 +1,4 @@
-from streamlit_webrtc import webrtc_streamer
+from streamlit_webrtc import webrtc_streamer, RTCConfiguration
 import av
 # 
 from PIL import Image
@@ -24,6 +24,10 @@ def print_to_file(*args):
 # print = print_to_file
 
 # variable setting
+RTC_CONFIGURATION = RTCConfiguration(
+    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+)
+
 # address = 'https://140.117.75.46:2087/detect_img_jpg'
 # address = 'https://192.168.1.7:2087/detect_img_jpg'
 
@@ -117,6 +121,8 @@ class GPRCFaceDetection:
         return av.VideoFrame.from_ndarray(out_img, format='bgr24')
 
 webrtc_streamer(
+    mode=WebRtcMode.SENDRECV,
+    rtc_configuration=RTC_CONFIGURATION,
     media_stream_constraints={'video': True, 'audio': False},
     video_processor_factory=GPRCFaceDetection,
     key='sample',
