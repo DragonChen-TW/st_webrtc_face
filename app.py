@@ -5,6 +5,8 @@ from PIL import Image
 import cv2
 import simplejpeg as sjpg
 import requests
+import requests.packages.urllib3
+requests.packages.urllib3.disable_warnings()
 import random
 import os
 import io
@@ -43,6 +45,7 @@ class FlaskFaceDetection:
         self.session = requests.Session()
         self.session.trust_env = False
         self.sm = SubMeter()
+        self.response = SubMeter()
 
         self.color_set = {}
 
@@ -57,6 +60,8 @@ class FlaskFaceDetection:
         if self.remote_send:
             print('send')
             self.remote_send = False
+            
+            t1 = time.time()
 
             # ----- compress to jpeg -----
             img = sjpg.encode_jpeg(ori_img)
@@ -116,6 +121,12 @@ class FlaskFaceDetection:
             self.sm.plot()
             if len(self.sm.total_list) == 30:
                 print('fps', 1 / (sum(self.sm.total_list) / len(self.sm.total_list)))
+            
+            t1 = time.time() - t1
+            self.response.update(t1, 1e-10, 1e-10, 1e-10)
+            self.response.plot()
+            if len(self.response.total_list) == 30:
+                print('fps', 1 / (sum(self.response.total_list) / len(self.response.total_list)))
 
             out_img = ori_img
             out_img = draw(res_cls, [ori_img])[0]
