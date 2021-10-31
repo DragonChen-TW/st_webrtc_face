@@ -21,7 +21,7 @@ def print_to_file(*args):
     with open('out.txt', 'a+') as f:
         f.write(' '.join(out_arr))
         f.write('\n')
-print = print_to_file
+# print = print_to_file
 
 # variable setting
 # address = 'https://140.117.75.46:2087/detect_img_jpg'
