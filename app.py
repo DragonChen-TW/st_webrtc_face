@@ -11,6 +11,7 @@ import io
 import time
 # 
 from meter import SubMeter
+from plotting import draw, names
 
 import http.client
 http.client.HTTPConnection.debuglevel = 1
@@ -27,7 +28,7 @@ print = print_to_file
 # address = 'https://192.168.1.7:2087/detect_img_jpg'
 
 # simple YOLOv5
-# address = 'http://192.168.1.6:50001'
+address = 'http://192.168.1.6:3100/single_jpg'
 
 class GPRCFaceDetection:
     def __init__(self):
@@ -65,32 +66,48 @@ class GPRCFaceDetection:
                 verify=False,
             )
             
-            res = res.json()
-            print(res)
-            self.sm.times_update(res['time'])
-            self.sm.plot()
+            # # ----- draw -----
+            # res = res.json()
+            # print(res)
+            # self.sm.times_update(res['time'])
+            # self.sm.plot()
 
-            is_identified = [r['name'] for r in res['registered']]
+            # is_identified = [r['name'] for r in res['registered']]
+
+            # out_img = ori_img
+
+            # for n in is_identified:
+            #     if n not in self.color_set:
+            #         self.color_set[n] = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
+            # for i, face in enumerate(res['faces']):
+            #     p1 = tuple(face[0])
+            #     p2 = tuple(face[1])
+            #     c = self.color_set[is_identified[i]]
+            #     img = cv2.rectangle(out_img, p1, p2, c, 10)
+
+            # for reg in res['registered']:
+            #     text = '{:.02f} {}'.format(reg['confidence'], reg['name'])
+            #     f_idx = reg['face_id']
+            #     loc = res['faces'][f_idx][0]
+            #     loc = (loc[0], loc[1] - 10)
+            #     c = self.color_set[reg['name']]
+            #     cv2.putText(out_img, text, loc, cv2.FONT_HERSHEY_DUPLEX, 1, c, 2, cv2.LINE_AA)
+
+
+            # draw for .6 YOLOv5
+            res = res.json()
+            print('res', res)
+
+            class Res:
+                pass
+            res_cls = Res()
+            res_cls.names = names
+            for k, v in res.items():
+                setattr(res_cls, k, v)
 
             out_img = ori_img
-
-            for n in is_identified:
-                if n not in self.color_set:
-                    self.color_set[n] = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-
-            for i, face in enumerate(res['faces']):
-                p1 = tuple(face[0])
-                p2 = tuple(face[1])
-                c = self.color_set[is_identified[i]]
-                img = cv2.rectangle(out_img, p1, p2, c, 10)
-
-            for reg in res['registered']:
-                text = '{:.02f} {}'.format(reg['confidence'], reg['name'])
-                f_idx = reg['face_id']
-                loc = res['faces'][f_idx][0]
-                loc = (loc[0], loc[1] - 10)
-                c = self.color_set[reg['name']]
-                cv2.putText(out_img, text, loc, cv2.FONT_HERSHEY_DUPLEX, 1, c, 2, cv2.LINE_AA)
+            out_img = draw(res_cls, [ori_img])[0]
             
             self.grpc_send = True
 
