@@ -1,7 +1,6 @@
 import random
 import numpy as np
 import cv2
-import torch
 
 # =========== Plot ===========
 names = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
@@ -36,10 +35,7 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=None):
 def draw(out, frames):
     out_frames = []
     for i, bboxs in enumerate(out.xyxy):
-        if isinstance(frames[i], torch.Tensor):
-            frame = frames[i].detach().cpu().numpy()
-        else:
-            frame = np.array(frames[i])
+        frame = np.array(frames[i])
 
         for bbox in bboxs:
             threshold = 0.5
