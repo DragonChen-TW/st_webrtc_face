@@ -121,7 +121,7 @@ class GPRCFaceDetection:
         return av.VideoFrame.from_ndarray(out_img, format='bgr24')
 
 webrtc_streamer(
-    mode=WebRtcMode.SENDRECV,
+    # mode=WebRtcMode.SENDRECV,
     rtc_configuration=RTC_CONFIGURATION,
     media_stream_constraints={'video': True, 'audio': False},
     video_processor_factory=GPRCFaceDetection,
