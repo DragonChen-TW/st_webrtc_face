@@ -38,6 +38,7 @@ RTC_CONFIGURATION = RTCConfiguration(
 # address = 'http://140.117.75.46:3100/single_jpg'
 # address = 'https://140.117.75.46:3100/single_jpg'
 address = 'https://datasci.mis.nsysu.edu.tw:3100/single_jpg'
+# address = 'https://localhost:3100/single_jpg'
 
 class FlaskFaceDetection:
     def __init__(self):
@@ -58,7 +59,7 @@ class FlaskFaceDetection:
         # ----- setting width and height skiped -----
 
         if self.remote_send:
-            print('send')
+#             print('send')
             self.remote_send = False
             
             t1 = time.time()
@@ -109,7 +110,7 @@ class FlaskFaceDetection:
 
             # draw for .6 YOLOv5
             res = res.json()
-            print('res', res)
+#             print('res', res)
 
             class Res:
                 names = names

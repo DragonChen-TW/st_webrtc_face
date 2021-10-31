@@ -1,2 +1,2 @@
 default:
-	streamlit run app.py
+	streamlit run app.py --server.port=2100 --server.enableXsrfProtection=false --server.enableCORS=false
