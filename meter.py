@@ -8,11 +8,12 @@ class SubMeter:
         self.plda_list = []
         self.total_list = []
     
-    def update(self, s1, s2, s3):
-        self.yolo_list.append(s1)
-        self.mobile_list.append(s2)
-        self.plda_list.append(s3)
-        self.total_list.append(s1 + s2 + s3)
+    def update(self, s1, s2, s3, s4):
+        self.savefile_list.append(s1)
+        self.yolo_list.append(s2)
+        self.mobile_list.append(s3)
+        self.plda_list.append(s4)
+        self.total_list.append(s1 + s2 + s3 + s4)
     
     def times_update(self, times):
         self.savefile_list.append(times['save_file_time'])
