@@ -1,21 +1,20 @@
 from streamlit_webrtc import webrtc_streamer, RTCConfiguration
+import streamlit as st
 import av
 # 
 from PIL import Image
 import cv2
 import simplejpeg as sjpg
 import requests
-import requests.packages.urllib3
-requests.packages.urllib3.disable_warnings()
 import random
 import os
 import io
 import time
-import logging
-import numpy as np
 # 
 from meter import SubMeter
 from plotting import draw, names
+
+import queue
 
 # import http.client
 # http.client.HTTPConnection.debuglevel = 1
@@ -39,8 +38,8 @@ RTC_CONFIGURATION = RTCConfiguration(
 # address = 'http://192.168.1.6:3100/single_jpg'
 # address = 'http://140.117.75.46:3100/single_jpg'
 # address = 'https://140.117.75.46:3100/single_jpg'
-address = 'https://datasci.mis.nsysu.edu.tw:3100/single_jpg'
-# address = 'https://localhost:3100/single_jpg'
+# address = 'https://datasci.mis.nsysu.edu.tw:3100/single_jpg'
+address = 'http://localhost:3100/single_jpg'
 
 class FlaskFaceDetection:
     def __init__(self):
@@ -48,12 +47,14 @@ class FlaskFaceDetection:
         self.session = requests.Session()
         self.session.trust_env = False
         self.sm = SubMeter()
-        self.response = SubMeter()
-
         self.color_set = {}
+        self.result_queue = queue.Queue()
 
     def recv(self, frame):
+        self.result_queue = queue.Queue()
+        self.result_queue.put(frame)
         ori_img = frame.to_ndarray(format='bgr24') # type is numpy
+
         # shape is (h, w, 3)
         
         print(ori_img.shape)
@@ -61,24 +62,22 @@ class FlaskFaceDetection:
         # ----- setting width and height skiped -----
 
         if self.remote_send:
-#             print('send')
+            print('send')
             self.remote_send = False
-            
-            t1 = time.time()
 
             # ----- compress to jpeg -----
-            img = sjpg.encode_jpeg(ori_img)
+            img = sjpg.encode_jpeg(ori_img) #bytes
             # with open('temp.jpg', 'wb') as f:
             #     f.write(img)
 
             # ----- request backend -----
-            res = self.session.post(
+            res = self.session.post( # -> server_flask
                 address,
                 files={
-                    'picture': ('upload.jpg', io.BytesIO(img))
+                    'picture': ('upload.jpg', io.BytesIO(img)) # Camouflaged file
                 },
                 headers={'Connection': 'close'},
-                verify=False,
+                verify=False, # For CSIE SSL issue
             )
             
             # # ----- draw -----
@@ -112,29 +111,14 @@ class FlaskFaceDetection:
 
             # draw for .6 YOLOv5
             res = res.json()
-#             print('res', res)
+            print('res', res)
 
             class Res:
-                names = names
+                pass
             res_cls = Res()
+            res_cls.names = names
             for k, v in res.items():
                 setattr(res_cls, k, v)
-            
-            self.sm.update(res['encode_time'], res['modeling_time'], 1e-10, 1e-10)
-            self.sm.plot()
-            if len(self.sm.total_list) == 30:
-                print('fps', 1 / (sum(self.sm.total_list) / len(self.sm.total_list)))
-                logging.warning(f'avg {np.mean(self.sm.total_list)}')
-                logging.warning(f'fps {1 / np.mean(self.sm.total_list)}')
-            
-            t1 = time.time() - t1
-            self.response.update(t1, 1e-10, 1e-10, 1e-10)
-            self.response.plot()
-            if len(self.response.total_list) == 30:
-                print('fps', 1 / (sum(self.response.total_list) / len(self.response.total_list)))
-                logging.warning(f'avg {np.mean(self.response.total_list)}')
-                logging.warning(f'fps {1 / np.mean(self.response.total_list)}')
-
 
             out_img = ori_img
             out_img = draw(res_cls, [ori_img])[0]
@@ -143,11 +127,48 @@ class FlaskFaceDetection:
 
         return av.VideoFrame.from_ndarray(out_img, format='bgr24')
 
-webrtc_streamer(
+ctx = webrtc_streamer(
     # mode=WebRtcMode.SENDRECV,
     rtc_configuration=RTC_CONFIGURATION,
     media_stream_constraints={'video': True, 'audio': False},
-    video_processor_factory=FlaskFaceDetection,
+    video_processor_factory=FlaskFaceDetection, 
     key='sample',
 )
 
+st_show = st.empty()
+# st_photo = st.button('Take picture')
+
+# while True:
+#     if ctx.video_processor:
+#         print('st_photo out:', st_photo)
+#         try:
+#             video_frame = ctx.video_processor.result_queue.get(timeout=1)
+#         except queue.Empty:
+#             print('break1')
+#             break
+#     else:
+#         print('break2')
+#         break
+
+# if st_photo and video_frame:
+#     print('st_photo:', st_photo)
+#     video_frame = video_frame.to_ndarray(format='rgb24')
+#     st_show.image(video_frame)
+
+if st.button('Take picture'):
+    # if ctx.state.playing:
+    #     labels_placeholder = st.empty()
+    # while True:
+    if ctx.video_processor:
+        try:
+            video_frame = ctx.video_processor.result_queue.get(
+                timeout=1.0
+            )
+        except queue.Empty:
+            print('break1')
+            # break
+        video_frame = video_frame.to_ndarray(format='rgb24')
+        st_show.image(video_frame)
+    else:
+        print('break2')
+        # break
